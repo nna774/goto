@@ -22,7 +22,13 @@ Resources:
         Variables:
           Hoge: fuga
       Events:
-        Root: 
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /
+            Method: any
+        Proxy:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
