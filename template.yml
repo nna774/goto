@@ -17,10 +17,11 @@ Resources:
       Runtime: go1.x 
       FunctionName: goto
       Timeout: 30
-      Role: arn:aws:iam::486414336274:role/lambda-none
+      Role: arn:aws:iam::486414336274:role/goto # ここまできてだけど、CAPABILITY_IAM手元のマシンにつけたくないなと手で作った。
       Environment:
         Variables:
-          Hoge: fuga
+          DYNAMODB_ENDPOINT: ""
+          DYNAMODB_TABLE_NAME: !Ref GotoTable
       Events:
         Root:
           Type: Api
@@ -34,6 +35,16 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /{proxy+}
             Method: any
+  GotoTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: goto
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 Outputs:
   ApiURL:
     Description: "API endpoint URL for Prod environment"
