@@ -3,14 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"text/template"
 
 	"github.com/akrylysov/algnhsa"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/guregu/dynamo"
+	"github.com/nna774/lambda-authkun/adapter"
 )
 
 var endpoint = os.Getenv("DYNAMODB_ENDPOINT")
@@ -78,9 +81,20 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("%v", nil)))
 }
 
+func startAuthHandler(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("template/index.html")
+	if err != nil {
+		log.Fatalf("template error: %v", err)
+	}
+	if err := t.Execute(w, nil); err != nil {
+		log.Printf("failed to execute template: %v", err)
+	}
+}
+
 func main() {
 	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/!add", addHandler)
-	http.HandleFunc("/!add/", addHandler)
-	algnhsa.ListenAndServe(http.DefaultServeMux, nil)
+	http.HandleFunc("/_", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w,r, "/_/", http.StatusFound) })
+	http.HandleFunc("/_/", startAuthHandler) // もっといい区切り文字使いたかったけど、API Gatewayの制限であんまり選べなかった。
+	http.HandleFunc("/_auth/callback", adapter.NewCallbackHandler("https://auth.dark-kuins.net/callback"))
+	algnhsa.ListenAndServe(nil, &algnhsa.Options{RequestType: algnhsa.RequestTypeAPIGateway})
 }
