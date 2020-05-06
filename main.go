@@ -37,6 +37,18 @@ func get(key string) (item, error) {
 	return item, err
 }
 
+func list() ([]item, error) {
+	cfg := aws.NewConfig()
+	if endpoint != "" {
+		cfg = cfg.WithEndpoint(endpoint)
+	}
+	db := dynamo.New(session.New(), cfg)
+	table := db.Table(table)
+	var items []item
+	err := table.Scan().All(&items)
+	return items, err
+}
+
 func redirect(w http.ResponseWriter, r *http.Request, location string, status int) {
 	if !(300 <= status && status < 400) {
 		status = http.StatusTemporaryRedirect
@@ -91,10 +103,26 @@ func startAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func listHandler(w http.ResponseWriter, r *http.Request) {
+	items, err := list()
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	res, err := json.Marshal(items)
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(res)
+}
+
 func main() {
 	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/_", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w,r, "/_/", http.StatusFound) })
+	http.HandleFunc("/_", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/_/", http.StatusFound) })
 	http.HandleFunc("/_/", startAuthHandler) // もっといい区切り文字使いたかったけど、API Gatewayの制限であんまり選べなかった。
+	http.HandleFunc("/_/list", listHandler)
 	http.HandleFunc("/_auth/callback", adapter.NewCallbackHandler("https://auth.dark-kuins.net/callback"))
 	algnhsa.ListenAndServe(nil, &algnhsa.Options{RequestType: algnhsa.RequestTypeAPIGateway})
 }
