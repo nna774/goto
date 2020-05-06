@@ -26,7 +26,7 @@ Resources:
             Headers:
               Location: "'https://go.dark-kuins.net/_/'"
           ResponseTemplates:
-            application/json: '{"msg": "unauthorized! redirect to /_auth/initiate"}'
+            application/json: '{"msg": "unauthorized! goto /_/ (dont forget cookie!)"}'
         ACCESS_DENIED:
           StatusCode: 302
           ResponseParameters:
