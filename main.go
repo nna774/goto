@@ -118,11 +118,24 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+func showContextHandler(w http.ResponseWriter, r *http.Request) {
+	proxyReq, ok := algnhsa.ProxyRequestFromContext(r.Context())
+	if ok {
+		res, err := json.Marshal(proxyReq)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(res)
+	}
+}
+
 func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/_", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/_/", http.StatusFound) })
 	http.HandleFunc("/_/", startAuthHandler) // もっといい区切り文字使いたかったけど、API Gatewayの制限であんまり選べなかった。
 	http.HandleFunc("/_/list", listHandler)
+	http.HandleFunc("/_/showCtx/", showContextHandler)
 	http.HandleFunc("/_auth/callback", adapter.NewCallbackHandler("https://auth.dark-kuins.net/callback"))
 	algnhsa.ListenAndServe(nil, &algnhsa.Options{RequestType: algnhsa.RequestTypeAPIGateway})
 }
