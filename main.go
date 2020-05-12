@@ -16,6 +16,9 @@ import (
 	"github.com/nna774/lambda-authkun/adapter"
 )
 
+// HSTSMaxAge is max-age of HSTS
+const HSTSMaxAge = 7 * 24 * 3600
+
 var endpoint = os.Getenv("DYNAMODB_ENDPOINT")
 var table = os.Getenv("DYNAMODB_TABLE_NAME")
 
@@ -49,10 +52,15 @@ func list() ([]item, error) {
 	return items, err
 }
 
+func addHSTS(w http.ResponseWriter) {
+	w.Header().Add("Strict-Transport-Security", fmt.Sprintf("max-age=%d", HSTSMaxAge))
+}
+
 func redirect(w http.ResponseWriter, r *http.Request, location string, status int) {
 	if !(300 <= status && status < 400) {
 		status = http.StatusTemporaryRedirect
 	}
+	addHSTS(w)
 	http.Redirect(w, r, location, status)
 }
 
@@ -66,6 +74,7 @@ func (item item) toJSON() []byte {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	addHSTS(w)
 	if r.URL.Path == "/" {
 		w.Write([]byte("helo"))
 		return
@@ -90,10 +99,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func addHandler(w http.ResponseWriter, r *http.Request) {
+	addHSTS(w)
 	w.Write([]byte(fmt.Sprintf("%v", nil)))
 }
 
 func startAuthHandler(w http.ResponseWriter, r *http.Request) {
+	addHSTS(w)
 	t, err := template.ParseFiles("template/index.html")
 	if err != nil {
 		log.Fatalf("template error: %v", err)
@@ -104,6 +115,7 @@ func startAuthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
+	addHSTS(w)
 	items, err := list()
 	if err != nil {
 		w.Write([]byte(err.Error()))
@@ -119,6 +131,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func showContextHandler(w http.ResponseWriter, r *http.Request) {
+	addHSTS(w)
 	proxyReq, ok := algnhsa.ProxyRequestFromContext(r.Context())
 	if ok {
 		res, err := json.Marshal(proxyReq)
