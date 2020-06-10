@@ -17,7 +17,7 @@ import (
 )
 
 // HSTSMaxAge is max-age of HSTS
-const HSTSMaxAge = 7 * 24 * 3600
+const HSTSMaxAge = 6 * 30 * 24 * 3600
 
 var endpoint = os.Getenv("DYNAMODB_ENDPOINT")
 var table = os.Getenv("DYNAMODB_TABLE_NAME")
