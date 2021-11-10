@@ -3,17 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
-	"text/template"
 
 	"github.com/akrylysov/algnhsa"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/guregu/dynamo"
-	"github.com/nna774/lambda-authkun/adapter"
 )
 
 // HSTSMaxAge is max-age of HSTS
@@ -50,16 +47,6 @@ func get(key string) (*item, error) {
 	var item item
 	err = t.Get("id", key).One(&item)
 	return &item, err
-}
-
-func list() ([]item, error) {
-	t, err := table()
-	if err != nil {
-		return nil, err
-	}
-	var items []item
-	err = t.Scan().All(&items)
-	return items, err
 }
 
 func addHSTS(w http.ResponseWriter) {
@@ -114,52 +101,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	redirect(w, r, item.To, item.Status)
 }
 
-func startAuthHandler(w http.ResponseWriter, r *http.Request) {
-	addHSTS(w)
-	t, err := template.ParseFiles("template/index.html")
-	if err != nil {
-		log.Fatalf("template error: %v", err)
-	}
-	if err := t.Execute(w, nil); err != nil {
-		log.Printf("failed to execute template: %v", err)
-	}
-}
-
-func listHandler(w http.ResponseWriter, r *http.Request) {
-	addHSTS(w)
-	items, err := list()
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	res, err := json.Marshal(items)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Write(res)
-}
-
-func showContextHandler(w http.ResponseWriter, r *http.Request) {
-	addHSTS(w)
-	proxyReq, ok := algnhsa.ProxyRequestFromContext(r.Context())
-	if ok {
-		res, err := json.Marshal(proxyReq)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
-		w.Write(res)
-	}
-}
-
 func main() {
 	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/_", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/_/", http.StatusFound) })
-	http.HandleFunc("/_/", startAuthHandler) // もっといい区切り文字使いたかったけど、API Gatewayの制限であんまり選べなかった。
-	http.HandleFunc("/_/list", listHandler)
-	http.HandleFunc("/_/showCtx/", showContextHandler)
-	http.HandleFunc("/_auth/callback", adapter.NewCallbackHandler("https://auth.dark-kuins.net/callback"))
 	algnhsa.ListenAndServe(nil, &algnhsa.Options{RequestType: algnhsa.RequestTypeAPIGateway})
 }
