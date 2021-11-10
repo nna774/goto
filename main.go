@@ -20,7 +20,7 @@ import (
 const HSTSMaxAge = 6 * 30 * 24 * 3600
 
 var endpoint = os.Getenv("DYNAMODB_ENDPOINT")
-var table = os.Getenv("DYNAMODB_TABLE_NAME")
+var TableName = os.Getenv("DYNAMODB_TABLE_NAME")
 
 type item struct {
 	ID     string `json:"id" dynamo:"id"`
@@ -28,27 +28,37 @@ type item struct {
 	To     string `json:"to" dynamo:"to"`
 }
 
-func get(key string) (item, error) {
+func table() (*dynamo.Table, error) {
 	cfg := aws.NewConfig()
 	if endpoint != "" {
 		cfg = cfg.WithEndpoint(endpoint)
 	}
-	db := dynamo.New(session.New(), cfg)
-	table := db.Table(table)
+	s, err := session.NewSession()
+	if err != nil {
+		return nil, err
+	}
+	db := dynamo.New(s, cfg)
+	t := db.Table(TableName)
+	return &t, nil
+}
+
+func get(key string) (*item, error) {
+	t, err := table()
+	if err != nil {
+		return nil, err
+	}
 	var item item
-	err := table.Get("id", key).One(&item)
-	return item, err
+	err = t.Get("id", key).One(&item)
+	return &item, err
 }
 
 func list() ([]item, error) {
-	cfg := aws.NewConfig()
-	if endpoint != "" {
-		cfg = cfg.WithEndpoint(endpoint)
+	t, err := table()
+	if err != nil {
+		return nil, err
 	}
-	db := dynamo.New(session.New(), cfg)
-	table := db.Table(table)
 	var items []item
-	err := table.Scan().All(&items)
+	err = t.Scan().All(&items)
 	return items, err
 }
 
