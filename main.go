@@ -17,7 +17,7 @@ import (
 // HSTSMaxAge is max-age of HSTS
 const HSTSMaxAge = 6 * 30 * 24 * 3600
 
-var endpoint = os.Getenv("DYNAMODB_ENDPOINT")
+var Endpoint = os.Getenv("DYNAMODB_ENDPOINT")
 var TableName = os.Getenv("DYNAMODB_TABLE_NAME")
 
 type item struct {
@@ -33,8 +33,8 @@ func (item item) toJSON() []byte {
 
 func table() (*dynamo.Table, error) {
 	cfg := aws.NewConfig()
-	if endpoint != "" {
-		cfg = cfg.WithEndpoint(endpoint)
+	if Endpoint != "" {
+		cfg = cfg.WithEndpoint(Endpoint)
 	}
 	s, err := session.NewSession()
 	if err != nil {
