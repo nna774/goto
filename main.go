@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -58,12 +59,12 @@ func addHSTS(w http.ResponseWriter) {
 	w.Header().Add("Strict-Transport-Security", fmt.Sprintf("max-age=%d", HSTSMaxAge))
 }
 
-func redirect(w http.ResponseWriter, r *http.Request, location string, status int) {
+func redirect(w http.ResponseWriter, location string, status int) {
 	if !(300 <= status && status < 400) {
 		status = http.StatusTemporaryRedirect
 	}
 	addHSTS(w)
-	http.Redirect(w, r, location, status)
+	http.Redirect(w, &http.Request{Method: http.MethodGet, URL: &url.URL{Path: "/"}}, location, status)
 }
 
 func returnIndexError(w http.ResponseWriter, err error, key string) {
@@ -98,7 +99,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(item.toJSON())
 		return
 	}
-	redirect(w, r, item.To, item.Status)
+	redirect(w, item.To, item.Status)
 }
 
 func main() {
