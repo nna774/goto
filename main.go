@@ -64,10 +64,6 @@ func redirect(w http.ResponseWriter, r *http.Request, location string, status in
 	http.Redirect(w, r, location, status)
 }
 
-func write(w http.ResponseWriter, msg string) {
-	w.Write([]byte(msg))
-}
-
 func (item item) toJSON() []byte {
 	b, _ := json.Marshal(item)
 	return b
@@ -96,11 +92,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	redirect(w, r, item.To, item.Status)
-}
-
-func addHandler(w http.ResponseWriter, r *http.Request) {
-	addHSTS(w)
-	w.Write([]byte(fmt.Sprintf("%v", nil)))
 }
 
 func startAuthHandler(w http.ResponseWriter, r *http.Request) {
