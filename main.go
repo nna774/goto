@@ -27,7 +27,7 @@ type item struct {
 }
 
 func (item item) toJSON() []byte {
-	b, _ := json.Marshal(item)
+	b, _ := json.Marshal(item) // never fails, so ignore error
 	return b
 }
 
