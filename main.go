@@ -25,6 +25,11 @@ type item struct {
 	To     string `json:"to" dynamo:"to"`
 }
 
+func (item item) toJSON() []byte {
+	b, _ := json.Marshal(item)
+	return b
+}
+
 func table() (*dynamo.Table, error) {
 	cfg := aws.NewConfig()
 	if endpoint != "" {
@@ -59,11 +64,6 @@ func redirect(w http.ResponseWriter, r *http.Request, location string, status in
 	}
 	addHSTS(w)
 	http.Redirect(w, r, location, status)
-}
-
-func (item item) toJSON() []byte {
-	b, _ := json.Marshal(item)
-	return b
 }
 
 func returnIndexError(w http.ResponseWriter, err error, key string) {
