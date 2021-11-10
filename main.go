@@ -79,6 +79,16 @@ func (item item) toJSON() []byte {
 	return b
 }
 
+func returnIndexError(w http.ResponseWriter, err error, key string) {
+	w.Header().Add("Content-Type", "text/html")
+	w.Write([]byte("<!doctype html><title>no such key</title>"))
+	w.Write([]byte(fmt.Sprintf("err: %v<br />\n", err.Error())))
+	if i := strings.LastIndex(key, "/"); i > 0 { // keyはURIのpathなので、必ず/から始まるが、それを除いて/を含んでいるもの。
+		prefixKey := key[:i]
+		w.Write([]byte(fmt.Sprintf("maybe here?: <a href='%v'>%v</a>", prefixKey, prefixKey))) // そこへのリンクを出しておく。
+	}
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	addHSTS(w)
 	if r.URL.Path == "/" {
@@ -93,7 +103,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	item, err := get(key)
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		returnIndexError(w, err, key)
 		return
 	}
 	if expand {
