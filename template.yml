@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
-Resources: 
+Resources:
   ApiGateway:
     Name: goto
     Type: AWS::Serverless::Api
@@ -34,11 +34,11 @@ Resources:
               Location: context.authorizer.location
           ResponseTemplates:
             application/json: $context.authorizer.msg
-  Function: 
-    Type: AWS::Serverless::Function 
-    Properties: 
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
       Handler: goto
-      Runtime: go1.x 
+      Runtime: go1.x
       FunctionName: goto
       Timeout: 30
       Role: arn:aws:iam::486414336274:role/goto # ここまできてだけど、CAPABILITY_IAM手元のマシンにつけたくないなと手で作った。
