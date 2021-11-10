@@ -69,6 +69,11 @@ func redirect(w http.ResponseWriter, location string, status int) {
 
 func returnIndexError(w http.ResponseWriter, err error, key string) {
 	w.Header().Add("Content-Type", "text/html")
+	if err == dynamo.ErrNotFound {
+		w.WriteHeader(http.StatusNotFound)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 	w.Write([]byte("<!doctype html><title>no such key</title>"))
 	w.Write([]byte(fmt.Sprintf("err: %v<br />\n", err.Error())))
 	if i := strings.LastIndex(key, "/"); i > 0 { // keyはURIのpathなので、必ず/から始まるが、それを除いて/を含んでいるもの。
