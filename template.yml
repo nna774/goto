@@ -9,31 +9,6 @@ Resources:
       Domain:
         CertificateArn: arn:aws:acm:ap-northeast-1:486414336274:certificate/5b205c4d-aec3-4ee1-b5e5-3b338026dcf4
         DomainName: go.dark-kuins.net
-      EndpointConfiguration:
-      Auth:
-        Authorizers:
-          Authkun:
-            FunctionPayloadType: REQUEST
-            FunctionArn: arn:aws:lambda:ap-northeast-1:486414336274:function:lambda-authkun
-            Identity:
-              Headers:
-                - Cookie
-              ReauthorizeEvery: 0
-      GatewayResponses:
-        UNAUTHORIZED:
-          StatusCode: 302
-          ResponseParameters:
-            Headers:
-              Location: "'https://go.dark-kuins.net/_/'"
-          ResponseTemplates:
-            application/json: '{"msg": "unauthorized! goto /_/ (dont forget cookie!)"}'
-        ACCESS_DENIED:
-          StatusCode: 302
-          ResponseParameters:
-            Headers:
-              Location: context.authorizer.location
-          ResponseTemplates:
-            application/json: $context.authorizer.msg
   Function:
     Type: AWS::Serverless::Function
     Properties:
@@ -59,26 +34,6 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /{proxy+}
             Method: any
-        Under:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /_
-            Method: any
-        NeedAuth:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /_/{proxy+}
-            Method: any
-            Auth:
-              Authorizer: Authkun
-        AdapterCallback:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /_auth/callback
-            Method: get
   GotoTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
