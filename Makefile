@@ -13,5 +13,4 @@ app-for-deploy:
 	GOOS=linux go build
 
 deploy: app-for-deploy
-	$(SAM) package --region $(REGION) --template-file template.yml --s3-bucket $(BUCKET) --output-template-file packaged-template.yml
-	$(SAM) deploy --region $(REGION) --template-file packaged-template.yml --stack-name $(STACK_NAME)
+	$(SAM) deploy --region $(REGION) --s3-bucket $(BUCKET) --template-file template.yml --stack-name $(STACK_NAME)
